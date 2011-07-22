@@ -1,0 +1,13 @@
+This requires the PHP GD library to be installed on the webserver.
+
+Typically, I create a softlink in my local webserver directory to the www directory:
+
+ln -s /path/to/species-identification-by-uploading-a-photo/www species-identification-by-uploading-a-photo
+
+then I alter permissions so the webserver has ownership (in my case apache) of the images/ and textures directories, executed from the base of the www directory:
+
+chown -R apache images
+chown -R apache textures
+
+ 
+
