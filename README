@@ -1,0 +1,12 @@
+To compile (requires OpenCV and GSL libraries) in a linux terminal:
+
+./make match_texture
+
+
+To execute
+
+./match_texture image.jpg texture_1.jpg texture_2.jpg texture_n.jpg METHOD
+
+where METHOD can be either INTERSECT or EMDL1
+
+This will return a series of CSV numbers, quantifying how good the match is.
