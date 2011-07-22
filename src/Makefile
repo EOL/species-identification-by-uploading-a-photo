@@ -50,5 +50,8 @@ match_texture: match_texture.c emdL1 get_histogram compare_histogram
 	mv match_texture ../bin/
 	rm -r *.o
 
+clean:
+	rm -r ../bin/match_texture
+
 
 

@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 		}
 
 
-		$match_cmd = $path." ".$crop_path." ".$texture_paths." INTERSECT";		// METHOD COULD BE EMDL1 or INTERSECT
+		$match_cmd = $path." ".$crop_path." ".$texture_paths." EMDL1";		// METHOD COULD BE EMDL1 or INTERSECT
 
 		$output = array();
 		$output = exec($match_cmd);
