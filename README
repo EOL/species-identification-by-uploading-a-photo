@@ -1,4 +1,4 @@
-To compile (requires OpenCV and GSL libraries) in a linux terminal:
+To compile (requires OpenCV and GSL libraries) from a terminal, you must first edit the Makefile and add the corresponding include flags for the two libraries if they lie outside of your PATH. You can then you can execute:
 
 ./make match_texture
 
