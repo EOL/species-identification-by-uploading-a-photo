@@ -1,12 +1,27 @@
-To compile (requires OpenCV and GSL libraries) from a terminal, you must first edit the Makefile and add the corresponding include flags for the two libraries if they lie outside of your PATH. You can then you can execute:
+To compile the histogram_backproject binary on a linux machine:
 
-./make match_texture
+1.	You must have the a c++ compiler installed, the default is g++ available from:
 
+	http://gcc.gnu.org/
 
-To execute
+	Compilations using other compilers has not been tested.
 
-./match_texture image.jpg texture_1.jpg texture_2.jpg texture_n.jpg METHOD
+1.	You must have the OpenCV and GSL libaries installed:
 
-where METHOD can be either INTERSECT or EMDL1
+	http://opencv.willowgarage.com/wiki/
+	http://www.gnu.org/software/gsl/
 
-This will return a series of CSV numbers, quantifying how good the match is.
+2.	Open src/Makefile with an editor:
+
+	Point the INCLUDES path variable to the corresponding directories where the OpenCV and GSL headers reside (default is /usr/include/opencv and /usr/include/gsl).
+	Point the LIB path variable to the corresponding directories where the OpenCV and GSL libraries reside (default is /usr/lib).
+
+	Close the editor.
+
+3.	From a terminal located within the src directory, execute:
+
+	> ./make histogram_backproject
+
+On success, this will place the binary inside the bin directory.
+
+For details on how to invoke the binary through the terminal, see the NOTES section in histogram_backproject.c.

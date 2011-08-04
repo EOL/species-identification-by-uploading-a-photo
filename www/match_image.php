@@ -92,22 +92,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 			$file_parts = pathinfo($file);
 
-			if ($file_parts['extension'] == "jpg") {
+			if (array_key_exists('extension', $file_parts)) {
 
-				$texture_paths = $texture_paths.'"/var/www/html/gsoc/textures/'.$file.'" ';
+				if ($file_parts['extension'] == "jpg") {
 
-				$files[$counter] = "textures/".$file;
-				$counter++;
+					$texture_paths = $texture_paths.'"/var/www/html/gsoc/textures/'.$file.'" ';
+
+					$files[$counter] = "textures/".$file;
+					$counter++;
+
+				}
 
 			}
 
 		}
 
+		$match_cmd = $path." ".$crop_path." ".$texture_paths." EMDL1";		// METHOD COULD BE INTERSECT, EMDL1, DD
 
-		$match_cmd = $path." ".$crop_path." ".$texture_paths." EMDL1";		// METHOD COULD BE EMDL1 or INTERSECT
+		// SYNCHRONOUS MODEL
+			
+			$output = array();
+			$output = exec($match_cmd);
 
-		$output = array();
-		$output = exec($match_cmd);
+		// ASYNCHRONOUS MODEL
+		
+			// TODO: Need to add job id to database and push this variable into jobs/queue as a UID.
+
+			//$match_cmd = $match_cmd." > jobs/test & echo $! >> jobs/queue & php process_job.php $!";
+			//exec($match_cmd);
 
 		$match_coeffs = explode(",", $output);
 
@@ -314,7 +326,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 					<?php
 					
-					asort($match_coeffs, SORT_NUMERIC);	// arsort for intersect, asort for EMD
+					asort($match_coeffs, SORT_NUMERIC);	// arsort for intersect, asort for EMD and DD
 
 					foreach ($match_coeffs as $key => $val) { ?>
 

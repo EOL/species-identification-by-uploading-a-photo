@@ -1,10 +1,23 @@
 /*
 
-file:	 		compare_histogram.c
-last modified:		22/07/11
-last modified by:	rmb	
+compare_histogram.c - compares two histograms using a specified metric
 
-*/	
+Copyright (C) 2011 Rob Barnsley (rmb@astro.ljmu.ac.uk)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -14,11 +27,12 @@ last modified by:	rmb
 #include "cv.h"
 
 #include "emdL1.h"
+#include "dd_head.h"
 
 #include <gsl/gsl_histogram2d.h>
 #include <gsl/gsl_statistics_double.h>
 
-double comp_intersect_histogram2d_gsl (gsl_histogram2d * patch_histogram, gsl_histogram2d * texture_histogram, int bins_x, int bins_y) {	// HIGH VALUE IS A POSITIVE MATCH
+double comp_intersect_histogram2d_gsl (gsl_histogram2d * patch_histogram, gsl_histogram2d * texture_histogram, int bins_x, int bins_y) {	// high value is a positive match
 
 	double these_histogram_sums [2] = {gsl_histogram2d_sum(patch_histogram), gsl_histogram2d_sum(texture_histogram)};
 	double min_histogram_sum = gsl_stats_min(these_histogram_sums, 1, 2);
@@ -43,11 +57,21 @@ double comp_intersect_histogram2d_gsl (gsl_histogram2d * patch_histogram, gsl_hi
 
 }
 
-double comp_emdL1_histogram2d_gsl (gsl_histogram2d * patch_histogram, gsl_histogram2d * texture_histogram, int bins_x, int bins_y) {	// LOW VALUE IS A POSITIVE MATCH
+double comp_emdL1_histogram2d_gsl (gsl_histogram2d * patch_histogram, gsl_histogram2d * texture_histogram, int bins_x, int bins_y) {	// low value is positive match
 
 	EmdL1	em;	// EMD_L1 class
 
 	double d = em.EmdDist(patch_histogram->bin,texture_histogram->bin,bins_x,bins_y);
+
+	return d;
+
+}
+
+double comp_dd_histogram2d_gsl  (gsl_histogram2d * patch_histogram, gsl_histogram2d * texture_histogram, int bins_x, int bins_y) {	// low value is positive match
+
+	dd_dist	dd;	// DD class
+
+	double d = dd.dd2D(patch_histogram->bin,texture_histogram->bin,bins_x,bins_y);
 
 	return d;
 

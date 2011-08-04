@@ -1,13 +1,10 @@
 <html>
-	<head>
-
-	</head>
-
-	<body style="background-color: #F0F3ED;">
-
-	<br/>
-
-	<center><div style="border-width: 1px; border-style: solid; border-color: black; padding: 10px; text-align: center; width: 400px; background-color: white;">
+<head>
+<link rel="stylesheet" type="text/css" href="css/stylesheet.css" />
+</head>
+<body>
+<br/>
+<center><div style="border-width: 1px; border-style: solid; border-color: black; padding: 10px; text-align: center; width: 400px; background-color: white;">
 
 		<h1>Prototype UI</h1>
 		<br/>
@@ -20,8 +17,7 @@
 		<a href="order_toolchain.php">Order Toolchain</a>	
 		<br/><br/>
 
-	</div></center>
-
-	</body>
-
+	</div>
+</center>
+</body>
 </html>
