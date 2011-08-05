@@ -1,32 +1,37 @@
 <?php
 
+$WARNING_ERROR_BOX = '<font style="background-color: yellow; border-color: black; border-width: 1px; border-style: solid;">WARNING</font>';
+$CRITICAL_ERROR_BOX = '<font style="background-color: red; border-color: black; border-width: 1px; border-style: solid;">CRITICAL</font>';
+$SUCCESS_BOX = '<font style="background-color: green; border-color: black; border-width: 1px; border-style: solid;">SUCCESS</font>';
+
 ini_set('display_errors',1);
 error_reporting(E_ALL);
 
-// open database connection
-
-include("connect.php");
-
-// match image
+include("connect.php");	// open database connection
+include("config.php");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
 
-	if (isset($_FILES['image']['name']) && (!empty($_FILES['image']['name']))) {
+	if (isset($_FILES['image']['name']) && (!empty($_FILES['image']['name']))) {		// upload image
 
 		$image_name = $_FILES['image']['name'];
 
-		$dest = "/var/www/html/gsoc/images/".$_FILES['image']['name'];
+		$dest = $IMAGE_DIR_PATH.$_FILES['image']['name'];
 
 		copy($_FILES['image']['tmp_name'], $dest);
 
 		$file_upload_success = TRUE;
-		$img_path = "images/".$_FILES['image']['name'];
+		$img_path = $dest;
 
 	}
 
 	if (isset($_POST['crop'])) 		// crop the image
 	{		
+
+		$file_upload_success = TRUE;
+		$image_name = $_POST['image_name'];
+		$img_path = $_POST['img_path'];
 
 		$targ_w = $_POST['w'];
 		$targ_h = $_POST['h'];
@@ -39,8 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 		$img_file_parts = pathinfo($path);
 
-		$output_img = "images/CROP_".$img_file_parts['filename'].".jpg";
-		//$output_log = "patch.log";
+		$output_img = $IMAGE_DIR_PATH."CROP_".$img_file_parts['filename'].".jpg";
 
 		$jpeg_quality = 100;
 
@@ -49,92 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 		$dst_r = ImageCreateTrueColor( $targ_w, $targ_h );
 
 		imagecopyresampled($dst_r,$img_r,0,0,$_POST['x'],$_POST['y'],$targ_w,$targ_h,$_POST['w'],$_POST['h']);
-
-		//header('Content-type: image/jpeg');
-		//imagejpeg($dst_r,NULL,$jpeg_quality);
-
 		imagejpeg($dst_r,$output_img,$jpeg_quality);
-
-		/*$output_fh = fopen($output_log, 'a') or die("can't open file");
-		$output_txt = $output_img."\t".$species."\t".$targ_x."\t".$targ_x2."\t".$targ_y."\t".$targ_y2."\t".$targ_w."\t".$targ_h."\n";
-		fwrite($output_fh , $output_txt);
-		fclose($output_fh );*/
 
 		$file_crop_success = TRUE;
 		$crop_path = $output_img;
-
-	}
-
-
-	if (isset($_POST['process'])) 		// crop the image
-	{		
-
-		$species = $_POST['species'];
-		$crop_path = $_POST['crop_path'];
-
-		$query = "SELECT * from species s LEFT JOIN process p on s.id = p.species_id LEFT JOIN programs pr on p.program_id = pr.id where s.id = ".$species." and is_match = 1 order by `order`";
-
-		$result = $dbh->query($query);
-
-		foreach($result as $row) {
-	
-			$path = $row['path'];
-
-		}
-
-		$handle = opendir('/var/www/html/gsoc/textures');
-
-		$counter = 0;
-
-		$texture_paths = "";
-
-		while (false !== ($file = readdir($handle))) {
-
-			$file_parts = pathinfo($file);
-
-			if (array_key_exists('extension', $file_parts)) {
-
-				if ($file_parts['extension'] == "jpg") {
-
-					$texture_paths = $texture_paths.'"/var/www/html/gsoc/textures/'.$file.'" ';
-
-					$files[$counter] = "textures/".$file;
-					$counter++;
-
-				}
-
-			}
-
-		}
-
-		$match_cmd = $path." ".$crop_path." ".$texture_paths." EMDL1";		// METHOD COULD BE INTERSECT, EMDL1, DD
-
-		// SYNCHRONOUS MODEL
-			
-			$output = array();
-			$output = exec($match_cmd);
-
-		// ASYNCHRONOUS MODEL
-		
-			// TODO: Need to add job id to database and push this variable into jobs/queue as a UID.
-
-			//$match_cmd = $match_cmd." > jobs/test & echo $! >> jobs/queue & php process_job.php $!";
-			//exec($match_cmd);
-
-		$match_coeffs = explode(",", $output);
-
-		$maxvalue = max($match_coeffs);
-
-		while(list($key,$value)=each($match_coeffs)){
-
-			if($value==$maxvalue)$maxindex=$key;
-
-		} 
-
-		//print $files[$maxindex]." ".$maxvalue;
-
-		$found = 1;
-
 
 	}
 
@@ -176,6 +98,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 		</script>
 
+		<script type="text/javascript">
+
+			function validate_form()
+			{
+
+				valid = true;
+
+				if ((document.crop.w.value <= 0) || (document.crop.h.value <= 0))				// image has not been cropped
+				{
+					alert("Must specify a window.");
+					valid = false;
+				}
+
+				return valid;
+
+			}
+
+		</script>
+
 	</head>
 
 	<body style="background-color: #F0F3ED; text-align: center;">
@@ -184,38 +125,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 	<div style="border-width: 1px; border-style: solid; border-color: black; padding: 10px; text-align: center; width: 1200px; background-color: white; margin: 0 auto; overflow: auto;">
 
-		<form name="upload" id="upload" action="match_image.php" enctype="multipart/form-data" method="post">
+		<h1>Image Matching</h1>
 
-			<h1>Image Matching</h1>
+		<div>
 
-			<div>
+			<h3>Step 1:</h3>
+			<p>Upload an image.</p>
 
-				<h3>Step 1:</h3>
-				<p>Upload an image.</p>
+		</div>
 
-			</div>
+		<?php if(isset($file_upload_success) && $file_upload_success == TRUE) { ?>
 
-			<?php if(isset($file_upload_success) && $file_upload_success = TRUE) { ?>
-
-				<font color="red">Image uploaded (<?php print $image_name; ?>).</font>
-
-			<?php } else { ?>
-
-			<div>
-
-				<input type="file" name="image"/>
-
-			</div>
-
-			<br/>
-
-			<div id="submit">
-
-				<input type="submit" value="Upload" />
-
-			</div>
-
-			<?php } ?>
+			<font color="red">Image uploaded (<?php print $image_name; ?>).</font>
 
 			<br/>
 
@@ -226,155 +147,145 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 			</div>
 
-			<?php if(isset($file_crop_success) && $file_crop_success = TRUE) { ?>
-
-			<div>
-
-				<img src="<?php print str_replace('/var/www/html/gsoc/', '', $crop_path); ?>"/>				
-
-			</div>
-
-			<?php } else if(isset($file_upload_success) && $file_upload_success = TRUE) { ?>
-	
-			<form name="crop" id="crop" method="POST">
+			<?php if(isset($file_crop_success) && $file_crop_success == TRUE) { ?>
 
 				<div>
 
-					<!-- This is the image we're attaching Jcrop to -->
-					<center><img src="<?php print $img_path; ?>" id="cropbox" style="border-color: black; border-width: 1px; border-style: solid;"/></center
-					<br/><br/>
-
-					<label style="font-size: 14" >X1 <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="x" name="x" /></label>
-					<label style="font-size: 14" >Y1 <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="y" name="y" /></label>
-					<label style="font-size: 14" >X2 <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="x2" name="x2" /></label>
-					<label style="font-size: 14" >Y2 <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="y2" name="y2" /></label>
-					<label style="font-size: 14" >W <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="w" name="w" /></label>
-					<label style="font-size: 14" >H <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="h" name="h" /></label>
-					<br/><br/>
-					<input type="hidden" name="crop" value="0"/>
-					<input type="hidden" name="img_path" value="<?php print $img_path; ?>"/>
-					<input type="submit" value="Crop image" onClick="this.form.crop.value=1;"/>
+					<img src="<?php print $crop_path; ?>"/>			
 
 				</div>
 
-			</form>
+				<form name="process" id="process" method="POST" action="match_image_process.php">
+
+					<div>
+
+						<h3>Step 3:</h3>
+						<p>Provide us with some information about what you're submitting.</p>
+
+						<select name="species_id">
+
+						<?php 
+
+						$query = "SELECT * FROM species";
+
+						$result = $dbh->query($query);
+
+						foreach($result as $row) {
+	
+							$this_species_id = $row['id'];
+							$this_species_name = $row['name'];
+
+						?>
+
+							<option <?php if(isset($species_id) && ($this_species_id == $species_id)) print "SELECTED" ?> value="<?php print $this_species_id; ?>"><?php print $this_species_name; ?></option>
+
+						<?php 
+
+						} 
+
+						?>
+
+						</select>
+
+					</div>
+
+					<br/>
+
+					<div>
+
+						<input type="hidden" name="species_id" value="<?php print $this_species_id; ?>"/>
+						<input type="hidden" name="crop_path" value="<?php print $crop_path; ?>"/>
+						<input type="submit" value="Show me the results!"/>
+
+					</div>
+
+				</form>
+
+			<?php } else { ?>
+
+				<form name="crop" id="crop" method="POST">
+
+					<div>
+
+						<!-- This is the image we're attaching Jcrop to -->
+						<center><img src="<?php print $img_path; ?>" id="cropbox" style="border-color: black; border-width: 1px; border-style: solid;"/></center
+						<br/><br/>
+
+						<label style="font-size: 14" >X1 <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="x" name="x" /></label>
+						<label style="font-size: 14" >Y1 <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="y" name="y" /></label>
+						<label style="font-size: 14" >X2 <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="x2" name="x2" /></label>
+						<label style="font-size: 14" >Y2 <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="y2" name="y2" /></label>
+						<label style="font-size: 14" >W <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="w" name="w" /></label>
+						<label style="font-size: 14" >H <input style="border-width: 1px; border-style: solid; border-color: black;" type="text" size="4" id="h" name="h" /></label>
+						<br/><br/>
+						<input type="hidden" name="crop" value="0"/>
+						<input type="hidden" name="img_path" value="<?php print $img_path; ?>"/>
+						<input type="hidden" name="image_name" value="<?php print $image_name; ?>"/>
+						<input type="submit" value="Crop image" onClick="validate_form(); this.form.crop.value=1; return valid;"/>
+
+					</div>
+
+				</form>
 
 			<?php } ?>
 
-			<?php if(isset($file_crop_success) && $file_crop_success = TRUE) { ?>
+		<?php } else { ?>
 
-			<form name="process" id="process" method="POST">
-
+			<form name="upload" id="upload" action="match_image.php" enctype="multipart/form-data" method="post">
+	
 				<div>
 
-					<h3>Step 3:</h3>
-					<p>Provide us with some information about what you're submitting.</p>
-
-					<select name="species">
-
-					<?php 
-
-					$query = "SELECT * FROM species";
-
-					$result = $dbh->query($query);
-
-					foreach($result as $row) {
-	
-						$id = $row['id'];
-						$name = $row['name'];
-
-					?>
-
-						<option <?php if(isset($species) && ($species == $id)) print "SELECTED" ?> value="<?php print $id; ?>"><?php print $name; ?></option>
-
-					<?php 
-
-					} 
-
-					?>
-
-					</select>
+					<input type="file" name="image"/>
 
 				</div>
 
 				<br/>
 
-				<div>
+				<div id="submit">
 
-					<input type="hidden" name="process" value="0"/>
-					<input type="hidden" name="crop_path" value="<?php print $crop_path; ?>"/>
-					<input type="submit" value="Show me the results!" onClick="this.form.process.value=1;"/>
+					<input type="submit" value="Upload" />
 
 				</div>
 
 			</form>
 
-			<?php } ?>
+		<?php } ?>
 
-			<?php if (isset($found)) { ?>
+		<div id="error">
 
-			<div>
+			<?php if(isset($error_msg)) { 
 
-				<h3>Result:</h3>
-				<br/>
+				print $error_msg; 
 
-					<!--<img src="<?php print str_replace('/var/www/html/gsoc/', '', $crop_path); ?>"/>
-					<img src="<?php print str_replace('/var/www/html/gsoc/', '', $files[$maxindex]); ?>"/>
-					<?php print $maxvalue; ?>-->
-
-					<img src="<?php print str_replace('/var/www/html/gsoc/', '', $crop_path); ?>"/><br/><br/><br/>
-
-					<?php
-					
-					asort($match_coeffs, SORT_NUMERIC);	// arsort for intersect, asort for EMD and DD
-
-					foreach ($match_coeffs as $key => $val) { ?>
-
-					   	<img style="width: 30px; height: 30px;" src="<?php print $files[$key]; ?>"/><?php print $match_coeffs[$key]; ?><br/> 
-
-					<?php } ?>
-
-			</div>
-
-			<?php } ?>
-
-			<div id="error">
-
-				<?php if(isset($error_msg)) { 
-
-					print $error_msg; 
-
-				} else if(isset($success_msg)) { 
+			} else if(isset($success_msg)) { 
 		
-					print $success_msg; 
+				print $success_msg; 
 
-				} else { 
+			} else { 
 
-					print "&nbsp;"; 
+				print "&nbsp;"; 
 
-				} ?>
+			} ?>
+
+		</div>
+
+		<br/>
+
+		<div id="page_controls">
+
+			<div style="float: left;">
+	
+				<a href="index.php">Back</a>
 
 			</div>
 
-			<br/>
-
-			<div id="page_controls">
-
-				<div style="float: left;">
+			<div style="float: right;">
 	
-					<a href="index.php">Back</a>
+				<a href="match_image.php">Reset</a>
 
-				</div>
+			</div>
 
-				<div style="float: right;">
-	
-					<a href="match_image.php">Reset</a>
-
-				</div>
-
-			</div>	
-
-		</form>
+		</div>	
 
 	</div></center>
 

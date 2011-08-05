@@ -1,6 +1,16 @@
 Directory contents:
 
-
+add_program.php - add a program to the database
+add_species.php - add a species to the database
+config.php - some configuration variables (e.g. histogram backprojection comparison type)
+connect.php - db connection script
+del_program.php - delete a program from the database
+del_species.php - delete a species from the database (note there are no foreign key constraints in place, so be careful about leaving orphaned entries)
+index.php - the UI page
+make_textures.php - make textures using the EOL API
+match_image.php - match an image > match_image_process.php - program dependent matching process page
+process_job.php - asynchronous job processing script
+view_textures.php - view available textures
 
 To setup the web front end:
 
@@ -20,11 +30,13 @@ To setup the web front end:
 
 	> ln -s /path/to/species-identification-by-uploading-a-photo/www species-identification-by-uploading-a-photo
 
-5.	The permissions must be altered so the web user has ownership (in this case apache) of the images, textures and jobs directories. Open a terminal and execute from the base of the www directory:
+5.	The permissions must be altered so the web user has ownership (in this case apache) of the images, textures, db and jobs directories. Open a terminal and execute from the base of the www directory:
 
-	> chown -R apache images
-	> chown -R apache textures
-	> chown -R apache jobs
+	> chown -R apache images textures jobs db
 
+	OR
+
+	> chgrp -R apache images textures jobs db
+	> chmod -R 664 apache images textures jobs db (directories must have read/write access)
  
 

@@ -1,5 +1,5 @@
 <?php
 
-	$dbh = new PDO('sqlite:data.db');
+	$dbh = new PDO('sqlite:db/data.db');
 
 ?>

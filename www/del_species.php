@@ -13,7 +13,20 @@ include("config.php");
 if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
 
-	$species_id = $_POST['species_id'];
+	if (isset($_POST['species_id']) && !empty($_POST['species_id'])) { 
+
+		$species_id = $_POST['species_id'];
+
+		$query = "DELETE FROM species WHERE id = ".$species_id;
+		$dbh->exec($query);
+
+		$success_msg = $SUCCESS_BOX."&nbsp;&nbsp;&nbsp;Species deleted.&nbsp;&nbsp;&nbsp;".$SUCCESS_BOX;
+
+	} else {
+
+		$error_msg = $CRITICAL_ERROR_BOX."&nbsp;&nbsp;&nbsp;A species must be defined.&nbsp;&nbsp;&nbsp;".$CRITICAL_ERROR_BOX;		
+
+	}
 
 }
 
@@ -30,31 +43,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 	<div style="border-width: 1px; border-style: solid; border-color: black; padding: 10px; text-align: center; width: 1200px; background-color: white; margin: 0 auto; overflow: auto;">
 
-		<form name="select_species" id="select_species" action="view_textures.php" method="post">
+		<form name="del_species" id="del_species" action="del_species.php" method="post">
 
-			<h1>View Textures</h1>
-			<p>Which species?</p>
+			<div> 
+				
+				<h1>Delete Species</h1>
+				<h3>Step 1:</h3>
+				<p>What is the species name?</p>
 
-			<div>
+				<div>
 
-				<select name="species_id" onChange="this.form.submit();">
-
-				<option value=""></option>
+					<table align="center">
 
 					<?php 
 
-					$query = "SELECT * FROM species";
+					$query = "SELECT * FROM species ORDER BY name ASC";
 
 					$result = $dbh->query($query);
 
 					foreach($result as $row) {
 	
-						$this_species_id = $row['id'];
-						$this_species_name = $row['name'];
+						$species_id = $row['id'];
+						$species_name = $row['name'];
+						$program_id = $row['program_id'];
 
 					?>
 
-						<option <?php if(isset($species_id) && ($species_id == $this_species_id)) print "SELECTED" ?> value="<?php print $this_species_id; ?>"><?php print $this_species_name; ?></option>
+						<tr><td><input type="radio" name="species_id" value="<?php print $species_id; ?>"/></td><td><?php print $species_name; ?></td></tr>
 
 					<?php 
 
@@ -62,53 +77,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 					?>
 
-				</select>
+					</table>
+
+				</div>
 
 			</div>
 
 			<br/>
 
-			<div style="text-align: left;">
-	
-				<table width="80%" align="center">
+			<div id="submit">
 
-				<?php
-
-				if(!empty($species_id)) {
-
-					$query = "SELECT * FROM textures WHERE species_id =".$species_id." ORDER BY texture_path";
-
-					$result = $dbh->query($query);
-
-					$cell_counter = 0;
-
-					foreach($result as $row) {
-	
-						$texture_path = $row['texture_path'];
-						$texture_number = $row['number'];
-
-						$cell_counter++;
-
-
-					?>
-					
-						<?php if ($cell_counter % 25== 0) { $cell_counter = 1; ?><tr><?php } ?>
-							<td style="padding:5px;"><img style="width: 30px; height: 30px;" src="<?php print $texture_path; ?>"/></td>
-						<?php if ($cell_counter % 25 == 0) { $cell_counter = 1; ?></tr><?php } ?>
-
-					<?php
-
-					}
-
-				}
-
-				?>
-
-				</table>
+				<input type="submit" value="Delete species"/>
 
 			</div>
 
 		</form>
+
+
+		<br/>
 
 		<div id="error">
 

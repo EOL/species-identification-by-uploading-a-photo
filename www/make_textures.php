@@ -1,100 +1,118 @@
 <?php
 
+$WARNING_ERROR_BOX = '<font style="background-color: yellow; border-color: black; border-width: 1px; border-style: solid;">WARNING</font>';
+$CRITICAL_ERROR_BOX = '<font style="background-color: red; border-color: black; border-width: 1px; border-style: solid;">CRITICAL</font>';
+$SUCCESS_BOX = '<font style="background-color: green; border-color: black; border-width: 1px; border-style: solid;">SUCCESS</font>';
+
 ini_set('display_errors',1);
 error_reporting(E_ALL|E_STRICT);
 
-// open database connection
-
-include("connect.php");
-
-//var_dump($_POST);
+include("connect.php"); // open database connection
+include("config.php");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
 
 	$i = $_POST['i'];
 	$j = $_POST['j'];
-	$process = $_POST['process'];
-	$continue = $_POST['continue'];
-	$patch_no = $_POST['patch_no'];
 
-	if ($process == TRUE) 		// process the texture
-	{		
-
-		$targ_w = $_POST['w'];
-		$targ_h = $_POST['h'];
-		$targ_x = $_POST['x'];
-		$targ_x2 = $_POST['x2'];
-		$targ_y = $_POST['y'];
-		$targ_y2 = $_POST['y2'];
-
-		$species = $_POST['species'];
-
-		$last_json = json_decode(file_get_contents("http://www.eol.org/api/pages/".$j.".json?images=75&details=1"));
-		$last_file = urldecode($last_json->dataObjects[$i]->mediaURL);
-		$last_file_parts = pathinfo($last_file);
-	
-		$output_img = "textures/patch_".$patch_no."_".$last_file_parts['filename'].".jpg";
-		//$output_log = "patch.log";
-
-		$jpeg_quality = 100;
-
-		$src = $last_file;
-		$img_r = imagecreatefromjpeg($src);
-		$dst_r = ImageCreateTrueColor( $targ_w, $targ_h );
-
-		imagecopyresampled($dst_r,$img_r,0,0,$_POST['x'],$_POST['y'],$targ_w,$targ_h,$_POST['w'],$_POST['h']);
-
-		//header('Content-type: image/jpeg');
-		//imagejpeg($dst_r,NULL,$jpeg_quality);
-
-		imagejpeg($dst_r,$output_img,$jpeg_quality);
-
-		/*$output_fh = fopen($output_log, 'a') or die("can't open file");
-		$output_txt = $output_img."\t".$species."\t".$targ_x."\t".$targ_x2."\t".$targ_y."\t".$targ_y2."\t".$targ_w."\t".$targ_h."\n";
-		fwrite($output_fh , $output_txt);
-		fclose($output_fh );*/
-
-		$query = "INSERT INTO textures (`path`, `number`, `species_id`) VALUES ('".$output_img."',".$patch_no.",".$species.")";
-
-		$dbh->exec($query);
-
-	}
-
-	if ($continue == TRUE)		 // advance to next image in EOL database?
+	if (isset($_POST['changepage']) && $_POST['changepage'] == 1) 
 	{	
 
-		$i++;
+		$patch_no = 0;
 
-		$this_json = json_decode(file_get_contents("http://www.eol.org/api/pages/".$j.".json?images=75&details=1"));	// need this to establish if we've reached end of objects
+	} else {
 
-		if ($i == count($this_json->dataObjects))
-		{
+		if (isset($_POST['process']) &&	$_POST['process'] == TRUE) 		// process the texture?
+		{		
 
-			$i = 1;
-			$j++;		
+			$patch_no = $_POST['patch_no'];
+
+			$targ_w = $_POST['w'];
+			$targ_h = $_POST['h'];
+			$targ_x = $_POST['x'];
+			$targ_x2 = $_POST['x2'];
+			$targ_y = $_POST['y'];
+			$targ_y2 = $_POST['y2'];
+
+			$species_id = $_POST['species_id'];
+		
+			$ref_file_path = $_POST['ref_file_path'];
+
+			$last_json = json_decode(file_get_contents("http://www.eol.org/api/pages/".$j.".json?images=75&details=1"));
+			$last_file = urldecode($last_json->dataObjects[$i]->mediaURL);
+			$last_file_parts = pathinfo($last_file);
+	
+			$output_img = $TEXTURE_DIR_PATH."texture_".$patch_no."_".$last_file_parts['filename'].".jpg";
+
+			$jpeg_quality = 100;
+
+			$src = $last_file;
+			$img_r = imagecreatefromjpeg($src);
+			$dst_r = ImageCreateTrueColor($targ_w, $targ_h);
+
+			imagecopyresampled($dst_r,$img_r,0,0,$_POST['x'],$_POST['y'],$targ_w,$targ_h,$_POST['w'],$_POST['h']);
+			imagejpeg($dst_r,$output_img,$jpeg_quality);
+
+			$query = "SELECT count(*) FROM textures WHERE texture_path = '".$output_img."'";
+			$result = $dbh->query($query);
+
+			$count = $result->fetchColumn();
+
+			if ($count > 0) {
+
+				$error_msg = $CRITICAL_ERROR_BOX."&nbsp;&nbsp;&nbsp;A texture already exists for this image/patch number.&nbsp;&nbsp;&nbsp;".$CRITICAL_ERROR_BOX;
+
+			} else {
+
+				$query = "INSERT INTO textures (`texture_path`, `ref_path`, `number`, `species_id`) VALUES ('".$output_img."', '".$ref_file_path."',".$patch_no.",".$species_id.")";
+				$dbh->exec($query);
+
+				$success_msg = $SUCCESS_BOX."&nbsp;&nbsp;&nbsp;Species added.&nbsp;&nbsp;&nbsp;".$SUCCESS_BOX;
+
+			}
 
 		}
 
-		$patch_no = 0;
-		unset($species);
+		if (isset($_POST['continue']) && $_POST['continue'] == TRUE) 		 // advance to next image in EOL database?
+		{	
 
-	} else {	// or don't
+			$patch_no = $_POST['patch_no'];
 
-		$patch_no++;
+			$i++;
 
+			$this_json = json_decode(file_get_contents("http://www.eol.org/api/pages/".$j.".json?images=75&details=1"));	// need this to establish if we've reached end of objects
+
+			if ($i == count($this_json->dataObjects))
+			{
+
+				$i = 1;
+				$j++;		
+
+			}
+
+			$patch_no = 0;
+			unset($species_id);
+
+		} else {			// or don't, take another texture
+
+			$patch_no = $_POST['patch_no'];
+
+			$patch_no++;
+
+		}
+	
 	}
-
 
 } else {			// initial setting of
 
 	$i = 1;			// dataObject
-	$j = 747;		// page
+	$j = 1;			// page
 	$patch_no = 0;		// patch number
 
 }
 
-// get the image from the EOL database
+// get the image from the EOL API
 
 $this_json = json_decode(file_get_contents("http://www.eol.org/api/pages/".$j.".json?images=75&details=1"));
 $this_file = urldecode($this_json->dataObjects[$i]->mediaURL);
@@ -144,9 +162,13 @@ $file_parts = pathinfo($this_file);
 
 			valid = true;
 
-			if ((document.process.w.value <= 0) ||(document.process.h.value <= 0))
+			if ((document.process.w.value <= 0) || (document.process.h.value <= 0))				// image has not been cropped
 			{
 				alert("Must specify a window.");
+				valid = false;
+			} else if (document.process.w.value*document.process.h.value < <?php print $MIN_TEXTURE_SIZE; ?>)	// image must have a minimum number of pixels, $MIN_TEXTURE_SIZE
+			{
+				alert("Minimum texture size is <?php print $MIN_TEXTURE_SIZE; ?>");
 				valid = false;
 			}
 
@@ -156,7 +178,6 @@ $file_parts = pathinfo($this_file);
 
 		</script>
 
-
 	</head>
 
 	<body style="background-color: #F0F3ED;">
@@ -165,15 +186,33 @@ $file_parts = pathinfo($this_file);
 
 	<center><div style="border-width: 1px; border-style: solid; border-color: black; padding: 10px; text-align: center; width: 1200px; background-color: white;">
 
-		<form name="process" id="process" action="make_textures.php" method="post" onsubmit="return checkCoords();">
+		<form name="change_page" id="change_page" action="make_textures.php" method="post">
 
 			<div>
 
 				<h1>Make textures</h1>
 				<h3>Step 1:</h3>
-				<p>What is this?</p>
+				<p>Select an EOL page and hit Go! (<a href="http://www.eol.org/api/docs/pages" target="_new">See EOL Doc<a/>)</p>
 
-				<select name="species">
+				<input type="text" name="j" value="<?php if (isset($j)) { print $j; } ?>"/>
+				<input type="hidden" name="i" value="1"/>
+				<input type="hidden" name="changepage" value="0"/>
+				<input type="submit" value="Go!" onclick="this.form.changepage.value=1"/>
+
+			</div>
+
+			<br/>
+
+		</form>
+
+		<form name="process" id="process" action="make_textures.php" method="post" onsubmit="return checkCoords();">
+
+			<div>
+
+				<h3>Step 2:</h3>
+				<p>What species do you think this?</p>
+
+				<select name="species_id">
 
 				<?php 
 
@@ -183,12 +222,12 @@ $file_parts = pathinfo($this_file);
 
 				foreach($result as $row) {
 	
-					$id = $row['id'];
-					$name = $row['name'];
+					$this_species_id = $row['id'];
+					$this_species_name = $row['name'];
 
 				?>
 
-					<option <?php if(isset($species) && ($species == $id)) print "SELECTED" ?> value="<?php print $id; ?>"><?php print $name; ?></option>
+					<option <?php if(isset($species_id) && ($this_species_id == $species_id)) print "SELECTED" ?> value="<?php print $this_species_id; ?>"><?php print $this_species_name; ?></option>
 
 				<?php 
 
@@ -204,7 +243,7 @@ $file_parts = pathinfo($this_file);
 
 			<div>
 
-				<h3>Step 2:</h3>
+				<h3>Step 3:</h3>
 				<p>Mark a region of interest.</p>
 
 				<!-- This is the image we're attaching Jcrop to -->
@@ -223,6 +262,7 @@ $file_parts = pathinfo($this_file);
 				<input type="hidden" name="patch_no" value="<?php print $patch_no; ?>"/>
 				<input type="hidden" name="i" value="<?php print $i; ?>"/>
 				<input type="hidden" name="j" value="<?php print $j; ?>"/>
+				<input type="hidden" name="ref_file_path" value="<?php print $this_file; ?>"/>
 				<input type="submit" value="Crop image and add another patch" onClick="validate_form(); this.form.process.value=1; this.form.continue.value=0; return valid;"/>
 				<input type="submit" value="Crop image and continue" onClick="validate_form(); this.form.process.value=1; this.form.continue.value=1; return valid;"/>
 				<input type="submit" value="Skip image" onClick="this.form.process.value=0; this.form.continue.value=1;"/>

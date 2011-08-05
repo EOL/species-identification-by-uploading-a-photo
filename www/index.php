@@ -10,11 +10,14 @@
 		<br/>
 		<a href="match_image.php">Match Image</a>
 		<hr/>
-		<a href="make_textures.php">Make Textures</a><br/>
-		<a href="view_textures.php">View Textures</a>
+		<a href="add_species.php">Add Species</a><br/>
+		<a href="del_species.php">Delete Species</a><br/>
 		<hr/>
-		<a href="create_toolchain.php">Create Toolchain</a><br/>		
-		<a href="order_toolchain.php">Order Toolchain</a>	
+		<a href="add_program.php">Add Program</a><br/>
+		<a href="del_program.php">Delete Program</a><br/>
+		<hr/>
+		<a href="make_textures.php">Make Textures From EOL API</a><br/>
+		<a href="view_textures.php">View Textures</a>			
 		<br/><br/>
 
 	</div>

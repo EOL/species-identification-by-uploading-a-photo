@@ -99,7 +99,6 @@ int main(int argc, char **argv) {
 	IplImage* img_input_conv = cvCreateImage(cvGetSize(img_input), 8, 3);		// create converted input image 
 	cvCvtColor(img_input, img_input_conv, CV_BGR2HSV);				// move to different colour space
 
-	// ****************************************************
 	// set up histogram parameters
 
 	CvSize img_input_size = cvGetSize(img_input_conv);
@@ -112,9 +111,8 @@ int main(int argc, char **argv) {
 	int bins_x = 10, bins_y = 10; 
 	double x_min = -1, x_max = 256, y_min = -1, y_max = 256;	// range is actually 0-255, but histogram is exclusive
 
-	// ****************************************************
 	// set up integral histogram
- 
+
 	int i, j;
 
 	gsl_histogram2d * cum_histograms [(img_input_w+1)*(img_input_h+1)];	// to make it computationally efficient, +1 is required to add zero padding	
@@ -128,7 +126,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	// ****************************************************
 	// populate integral histogram
 
 	CvScalar this_pix;
@@ -159,7 +156,6 @@ int main(int argc, char **argv) {
 	for (this_texture_num = texture_start_num; this_texture_num <= texture_end_num; this_texture_num++)
 	{
 
-		// ****************************************************
 		// convert from RGB to HSV colour space
 
 		gsl_histogram2d * texture_histogram = gsl_histogram2d_alloc (bins_x, bins_y);
@@ -169,7 +165,6 @@ int main(int argc, char **argv) {
 		IplImage* img_texture_conv = cvCreateImage(cvGetSize(img_texture), 8, 3);		// create converted image 
 		cvCvtColor(img_texture, img_texture_conv, CV_BGR2HSV);					// move to different colour space
 
-		// ****************************************************
 		// set up histogram parameters
 
 		CvSize img_texture_size = cvGetSize(img_texture_conv);
@@ -177,7 +172,6 @@ int main(int argc, char **argv) {
 		int img_texture_h = img_texture_size.height;
 		int img_texture_num_pix = img_texture_w * img_texture_h;
 
-		// ****************************************************
 		// input/texture image size check (backprojection will fail if the texture has dimensions larger than the input img)
 		
 		if ((img_texture_w > img_input_w) || (img_texture_h > img_input_h))	// skip this texture
