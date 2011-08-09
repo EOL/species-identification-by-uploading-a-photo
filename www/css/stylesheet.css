@@ -4,3 +4,17 @@ body {
 
 } 
 
+input.textbox {
+
+	border-color: black;
+	border-width: 1px;
+	border-style: solid;
+
+}
+
+td {
+
+	padding-left: 10px;
+	padding-right: 10px;
+
+}

@@ -16,61 +16,57 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 	$species_id = $_POST['species_id'];
 	$crop_path = $_POST['crop_path'];
 
-	// get binary
+	// get binaries
 
-	$query = "SELECT p.binary FROM species s LEFT JOIN programs p on s.program_id = p.id WHERE s.id = ".$species_id;
+	$query = "SELECT * FROM process proc LEFT JOIN programs prog on proc.program_id = prog.id WHERE proc.species_id = ".$species_id;
 	$result = $dbh->query($query);
+
+	$binary_iteration = 0;
 
 	foreach($result as $row) {
 	
-		$binary = $row['binary'];
+		$binary[$binary_iteration] = $row['binary'];
 
-	}
+		if ($binary[$binary_iteration] == "histogram_backproject") {
 
-	if ($binary == "histogram_backproject") {
+			// get textures
 
-		// get textures
+			$texture_paths = "";
 
-		$texture_paths = "";
+			$query = "SELECT * FROM textures WHERE species_id = ".$species_id;
+			$result = $dbh->query($query);
 
-		$query = "SELECT * FROM textures WHERE species_id = ".$species_id;
-		$result = $dbh->query($query);
+			$counter = 0;
 
-		$counter = 0;
-
-		foreach($result as $row) {
+			foreach($result as $row) {
 	
-			$texture_paths = $texture_paths.$row['texture_path']." ";
+				$texture_paths = $texture_paths.$row['texture_path']." ";
 
-			$texture_files[$counter] = $row['texture_path'];
-			$counter++;
+				$texture_files[$binary_iteration][$counter] = $row['texture_path'];	// 2D array, texture paths described by [number of binaries][number of textures]
+				$counter++;
+
+			}
+
+			$match_cmd = $BIN_DIR_PATH.$binary[$binary_iteration]." ".$crop_path." ".$texture_paths." ".$HISTOGRAM_COMPARISON_TYPE;
+
+			// SYNCHRONOUS MODEL
+			
+			$output = array();
+			$output = exec($match_cmd);
+
+			$match_coeffs[$binary_iteration] = explode(",", $output);	// 2D array, coefficients described by [number of binaries][number of textures]
+
+			// ASYNCHRONOUS MODEL
+		
+			// TODO: Need to add job id to database and push this variable into jobs/queue as a UID.
+
+			//$match_cmd = $match_cmd." > jobs/test & echo $! >> jobs/queue & php process_job.php $!";
+			//exec($match_cmd);
+
 
 		}
 
-		$match_cmd = $BIN_DIR_PATH.$binary." ".$crop_path." ".$texture_paths." ".$HISTOGRAM_COMPARISON_TYPE;
-
-		// SYNCHRONOUS MODEL
-			
-		$output = array();
-		$output = exec($match_cmd);
-
-		$match_coeffs = explode(",", $output);
-
-		$maxvalue = max($match_coeffs);
-
-		while(list($key,$value)=each($match_coeffs)){
-
-			if($value==$maxvalue) $maxindex=$key;
-
-		} 
-
-		// ASYNCHRONOUS MODEL
-		
-		// TODO: Need to add job id to database and push this variable into jobs/queue as a UID.
-
-		//$match_cmd = $match_cmd." > jobs/test & echo $! >> jobs/queue & php process_job.php $!";
-		//exec($match_cmd);
-
+		$binary_iteration++;
 
 	}
 
@@ -92,31 +88,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 		<h1>Image Matching</h1>
 		<br/>
-		<div>
-			<h3>Result:</h3>
-			<br/>
+		<img src="<?php print $crop_path; ?>"/><br/><br/><br/>
 
-			<?php if ($binary == "histogram_backproject") { ?>
+		<?php for ($i=0; $i<sizeof($binary); $i++) { ?>
 
-				<img src="<?php print $crop_path; ?>"/><br/><br/><br/>
+			<div> 			
 
-				<?php
+					<h3>Result (<?php print $binary[$i]; ?>):</h3>
+					<br/>
+
+					<?php if ($binary[$i] == "histogram_backproject") { 
 					
-				asort($match_coeffs, SORT_NUMERIC);	// arsort for INTERSECT, asort for EMD and DD
+						asort($match_coeffs[$i], SORT_NUMERIC);	// arsort for INTERSECT, asort for EMD and DD
 
-				foreach ($match_coeffs as $key => $val) { ?>
+						foreach ($match_coeffs[$i] as $key => $val) { ?>
 
-					<?php if ($match_coeffs[$key] != "") { ?>
+							<?php if ($match_coeffs[$i][$key] != "") { ?>
 
-				   		<img style="width: 30px; height: 30px;" src="<?php print $texture_files[$key]; ?>"/><?php print $match_coeffs[$key]; ?><br/> 
+						   		<img style="width: 30px; height: 30px;" src="<?php print $texture_files[$i][$key]; ?>"/><?php print $match_coeffs[$i][$key]; ?><br/> 
 
-					<?php } ?>
+							<?php } ?>
 
-				<?php }
+						<?php }
 
-			} ?>
+					} ?>
 
-		</div>
+					<br/>
+
+			</div>
+
+		<?php } ?>
 
 	</div>
 </center>

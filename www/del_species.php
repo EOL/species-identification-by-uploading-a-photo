@@ -20,6 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 		$query = "DELETE FROM species WHERE id = ".$species_id;
 		$dbh->exec($query);
 
+		$query = "DELETE FROM process WHERE species_id = ".$species_id;
+		$dbh->exec($query);
+
 		$success_msg = $SUCCESS_BOX."&nbsp;&nbsp;&nbsp;Species deleted.&nbsp;&nbsp;&nbsp;".$SUCCESS_BOX;
 
 	} else {
@@ -65,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 	
 						$species_id = $row['id'];
 						$species_name = $row['name'];
-						$program_id = $row['program_id'];
 
 					?>
 

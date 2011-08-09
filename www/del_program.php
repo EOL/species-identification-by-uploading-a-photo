@@ -17,10 +17,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 		$program_id = $_POST['program_id'];
 
-		$query = "DELETE FROM programs WHERE id = ".$program_id;
-		$dbh->exec($query);
+		$query = "SELECT count(*) FROM process p LEFT JOIN species s on p.species_id = s.id WHERE program_id = ".$program_id;
+		$result = $dbh->query($query);
 
-		$success_msg = $SUCCESS_BOX."&nbsp;&nbsp;&nbsp;Program deleted.&nbsp;&nbsp;&nbsp;".$SUCCESS_BOX;
+		$count = $result->fetchColumn();
+
+		if ($count > 0) {
+
+			$error_msg = $CRITICAL_ERROR_BOX."&nbsp;&nbsp;&nbsp;A species exists that uses this program. This must be deleted first.&nbsp;&nbsp;&nbsp;".$CRITICAL_ERROR_BOX;
+
+		} else {
+
+			$query = "DELETE FROM programs WHERE id = ".$program_id;
+			$dbh->exec($query);
+
+			$success_msg = $SUCCESS_BOX."&nbsp;&nbsp;&nbsp;Program deleted.&nbsp;&nbsp;&nbsp;".$SUCCESS_BOX;
+
+		}
 
 	} else {
 
