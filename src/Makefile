@@ -37,8 +37,21 @@ histogram_backproject: histogram_backproject.c emdL1 dd_dist get_histogram compa
 	mv histogram_backproject ../bin/
 	rm -ir *.o
 
+cvgabor: cvgabor.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDES) $(LIB) -c cvgabor.cpp
+
+gabor_filter_functions: gabor_filter_functions.c
+	$(CC) $(CPPFLAGS) $(INCLUDES) $(LIB) -c gabor_filter_functions.c
+
+construct_gabor_mag_image: construct_gabor_mag_image.c cvgabor gabor_filter_functions
+	$(CC) $(CPPFLAGS) $(INCLUDES) $(LIB) cvgabor.o gabor_filter_functions.o construct_gabor_mag_image.c -lcv -lcxcore -lhighgui -lgsl -lm -o construct_gabor_mag_image
+	mv construct_gabor_mag_image ../bin/
+	rm -ir *.o
+
+all: construct_gabor_mag_image histogram_backproject
+
 clean:
-	rm -ir ../bin/histogram_backproject
+	rm -ir ../bin/histogram_backproject ../bin/construct_gabor_mag_image
 
 
 

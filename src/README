@@ -1,4 +1,4 @@
-To compile the histogram_backproject binary on a linux machine:
+To compile the binaries on a linux machine:
 
 1.	You must have the a c++ compiler installed, the default is g++ available from:
 
@@ -20,8 +20,8 @@ To compile the histogram_backproject binary on a linux machine:
 
 3.	From a terminal located within the src directory, execute:
 
-	> ./make histogram_backproject
+	> ./make all
 
-On success, this will place the binary inside the bin directory.
+On success, this will place the binaries inside the bin directory.
 
-For details on how to invoke the binary through the terminal, see the NOTES section in histogram_backproject.c.
+For details on how to invoke each binary through the terminal, see the NOTES section in the corresponding binary source file.

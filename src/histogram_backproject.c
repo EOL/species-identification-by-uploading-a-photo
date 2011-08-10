@@ -23,7 +23,7 @@ NOTES:
 
 1. The binary call takes the form of:
 
-   > match_texture 
+   > histogram_backproject
 
 	[/path/to/input_img] 
 	[/path/to/texture_1 /path/to/texture_2 ... /path/to/texture_n] 
