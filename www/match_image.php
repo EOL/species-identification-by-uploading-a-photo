@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 						?>
 
-							<option <?php if(isset($species_id) && ($this_species_id == $species_id)) print "SELECTED" ?> value="<?php print $this_species_id; ?>"><?php print $this_species_name; ?></option>
+							<option <?php if(isset($species_id) && ($this_species_id == $species_id)) print "SELECTED" ?> value="<?php print $this_species_id; ?>"><?php print $this_species_id; ?></option>
 
 						<?php 
 
@@ -193,7 +193,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 					<div>
 
-						<input type="hidden" name="species_id" value="<?php print $this_species_id; ?>"/>
 						<input type="hidden" name="crop_path" value="<?php print $crop_path; ?>"/>
 						<input type="submit" value="Show me the results!"/>
 

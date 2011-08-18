@@ -48,7 +48,11 @@ construct_gabor_mag_image: construct_gabor_mag_image.c cvgabor gabor_filter_func
 	mv construct_gabor_mag_image ../bin/
 	rm -ir *.o
 
-all: construct_gabor_mag_image histogram_backproject
+compare_gabor_mag_images: compare_gabor_mag_images.c
+	$(CC) $(CPPFLAGS) $(INCLUDES) $(LIB) compare_gabor_mag_images.c -lgsl -lm -o compare_gabor_mag_images
+	mv compare_gabor_mag_images ../bin/
+
+all: construct_gabor_mag_image compare_gabor_mag_images histogram_backproject
 
 clean:
 	rm -ir ../bin/histogram_backproject ../bin/construct_gabor_mag_image

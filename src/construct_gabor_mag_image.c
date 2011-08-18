@@ -30,7 +30,9 @@ NOTES:
 	[SCALE]
 	[/path/to/output_img]
 
-2. Returned is a image showing the gabor magnitude coefficients for the given orientation and scale
+2. The mean and standard deviation are returned in order than a similarity comparison can be made.
+
+3. Returned is an image showing the gabor magnitude coefficients for the given orientation and scale
 
 */
 
@@ -46,6 +48,7 @@ NOTES:
 #include "cv.h"
 
 #include "gabor_filter_functions.h"
+#include "construct_gabor_mag_image.h"
 
 int main(int argc, char **argv) {
 
@@ -55,15 +58,28 @@ int main(int argc, char **argv) {
 	char *input_img_name	= strdup(argv[1]);
 	long int orientation 	= strtol(argv[2], NULL, 0);
 	long int scale 		= strtol(argv[3], NULL, 0);
-	char *output_img_name	= strdup(argv[4]);
 
 	// PROCESS INPUT IMG
 	// ****************************************************
 
 	IplImage* input_img = cvLoadImage(input_img_name, CV_LOAD_IMAGE_COLOR);
+	IplImage *gabor_img = getGaborMagImg(input_img, orientation, scale);
+	
+	if (argc == 5)	// an output file name exists, so create it
+	{
+		char *output_img_name	= strdup(argv[4]);
+		cvSaveImage(output_img_name, gabor_img);
+	}
 
-	IplImage *output_img = getGaborMagImg(input_img, orientation, scale);
-	cvSaveImage(output_img_name, output_img); 
+	// CALCULATE MEAN AND STDDEV
+	// ****************************************************
+
+	CvScalar mean, stddev;
+	cvAvgSdv(gabor_img, &mean, &stddev);
+
+	printf("%f,%f", mean.val[0], stddev.val[0]);
+
+	return 0;
 
 	/*cvNamedWindow("Testing",1);
 	cvShowImage("Testing",pImage);

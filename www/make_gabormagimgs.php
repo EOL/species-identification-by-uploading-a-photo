@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 	} else {
 
-		if (isset($_POST['process']) &&	$_POST['process'] == TRUE) 		// process the texture?
+		if (isset($_POST['process']) &&	$_POST['process'] == TRUE) 		// process the gabor magnitude image?
 		{		
 
 			$patch_no = $_POST['patch_no'];
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 			$last_file = urldecode($last_json->dataObjects[$i]->mediaURL);
 			$last_file_parts = pathinfo($last_file);
 	
-			$output_img = $TEXTURE_DIR_PATH."texture_".$patch_no."_".$last_file_parts['filename'].".jpg";
+			$output_img = $GABORMAGIMG_DIR_PATH."gabormagimg_".$patch_no."_".$last_file_parts['filename'].".jpg";
 
 			$jpeg_quality = 100;
 
@@ -54,21 +54,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 			imagecopyresampled($dst_r,$img_r,0,0,$_POST['x'],$_POST['y'],$targ_w,$targ_h,$_POST['w'],$_POST['h']);
 			imagejpeg($dst_r,$output_img,$jpeg_quality);
 
-			$query = "SELECT count(*) FROM textures WHERE texture_path = '".$output_img."'";
-			$result = $dbh->query($query);
+			for ($scale=0; $scale<$GABOR_MAG_SCALE_LIMIT; $scale++) {
 
-			$count = $result->fetchColumn();
+				for ($orientation=0; $orientation<$GABOR_MAG_ORIENTATION_LIMIT; $orientation++) {
 
-			if ($count > 0) {
+					$output_gabormag_img = $GABORMAGIMG_DIR_PATH."gabormagimg_".$patch_no."_".$orientation."_".$scale."_".$last_file_parts['filename'].".pgm";
+					$gabor_cmd = $BIN_DIR_PATH."construct_gabor_mag_image ".$output_img." ".$orientation." ".$scale." ".$output_gabormag_img;
 
-				$error_msg = $CRITICAL_ERROR_BOX."&nbsp;&nbsp;&nbsp;A texture already exists for this image/patch number.&nbsp;&nbsp;&nbsp;".$CRITICAL_ERROR_BOX;
+					// generate Gabor magnitude images	
+					$output = array();
+					$output = exec($gabor_cmd);
 
-			} else {
+					$output_stats = explode(",", $output);	// 2D array, [0] = mean, [1] = stddev
 
-				$query = "INSERT INTO textures (`texture_path`, `ref_path`, `number`, `species_id`) VALUES ('".$output_img."', '".$ref_file_path."',".$patch_no.",".$species_id.")";
-				$dbh->exec($query);
+					$query = "SELECT count(*) FROM gabormagimgs WHERE gabormagimg_path = '".$output_gabormag_img."'";
+					$result = $dbh->query($query);
 
-				$success_msg = $SUCCESS_BOX."&nbsp;&nbsp;&nbsp;Texture added.&nbsp;&nbsp;&nbsp;".$SUCCESS_BOX;
+					$count = $result->fetchColumn();
+
+					if ($count > 0) {
+
+						$error_msg = $CRITICAL_ERROR_BOX."&nbsp;&nbsp;&nbsp;A gabor magnitude image already exists for this image/patch number.&nbsp;&nbsp;&nbsp;".$CRITICAL_ERROR_BOX;
+						break;
+
+					} else {
+
+						$query = "INSERT INTO gabormagimgs (`gabormagimg_path`, `img_path`, `ref_path`, `number`, `species_id`, `orientation`, `scale`, `mean`, `stddev`) VALUES ('".$output_gabormag_img."', '".$output_img."', '".$ref_file_path."',".$patch_no.",".$species_id.",".$orientation.",".$scale.",".$output_stats[0].",".$output_stats[1].")";
+				
+						$dbh->exec($query);
+
+						$success_msg = $SUCCESS_BOX."&nbsp;&nbsp;&nbsp;Gabor magnitude image added.&nbsp;&nbsp;&nbsp;".$SUCCESS_BOX;
+
+					}
+
+				}
 
 			}
 
@@ -94,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 			$patch_no = 0;
 			unset($species_id);
 
-		} else {			// or don't, take another texture
+		} else {			// or don't, take another gabor magnitude image
 
 			$patch_no = $_POST['patch_no'];
 
@@ -166,9 +185,9 @@ $file_parts = pathinfo($this_file);
 			{
 				alert("Must specify a window.");
 				valid = false;
-			} else if (document.process.w.value*document.process.h.value < <?php print $MIN_TEXTURE_SIZE; ?>)	// image must have a minimum number of pixels, $MIN_TEXTURE_SIZE
+			} else if (document.process.w.value*document.process.h.value < <?php print $MIN_GABORMAGIMG_SIZE; ?>)	// image must have a minimum number of pixels, $MIN_GABORMAGIMG_SIZE
 			{
-				alert("Minimum texture size is <?php print $MIN_TEXTURE_SIZE; ?>");
+				alert("Minimum texture size is <?php print $MIN_GABORMAGIMG_SIZE ?>");
 				valid = false;
 			}
 
@@ -186,11 +205,11 @@ $file_parts = pathinfo($this_file);
 
 	<center><div style="border-width: 1px; border-style: solid; border-color: black; padding: 10px; text-align: center; width: 1200px; background-color: white;">
 
-		<form name="change_page" id="change_page" action="make_textures.php" method="post">
+		<form name="change_page" id="change_page" action="make_gabormagimgs.php" method="post">
 
 			<div>
 
-				<h1>Make textures</h1>
+				<h1>Make Gabor Magnitude Image</h1>
 				<h3>Step 1:</h3>
 				<p>Select an EOL page and hit Go! (<a href="http://www.eol.org/api/docs/pages" target="_new">See EOL Doc<a/>)</p>
 
@@ -205,7 +224,7 @@ $file_parts = pathinfo($this_file);
 
 		</form>
 
-		<form name="process" id="process" action="make_textures.php" method="post" onsubmit="return checkCoords();">
+		<form name="process" id="process" action="make_gabormagimgs.php" method="post" onsubmit="return checkCoords();">
 
 			<div>
 

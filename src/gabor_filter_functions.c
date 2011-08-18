@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cvgabor.h"
 
+#include "gabor_filter_functions.h"
+
 IplImage* getGaborMagImg (IplImage* img, int orientation, int scale) {
                        
 	double Sigma = 2*PI;

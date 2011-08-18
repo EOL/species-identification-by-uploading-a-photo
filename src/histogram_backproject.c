@@ -83,6 +83,7 @@ NOTES:
 
 #include "compare_histogram.h"
 #include "get_histogram.h"
+#include "histogram_backproject.h"
 
 int main(int argc, char **argv) {
 

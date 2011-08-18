@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gsl/gsl_histogram2d.h>
 #include <gsl/gsl_statistics_double.h>
 
+#include "get_histogram.h"
+
 gsl_histogram2d * get_patch_histogram_through_integral (int x1, int x2, int y1, int y2, int img_input_w, int img_input_h, gsl_histogram2d * cum_histograms [], bool NORMALISE) {
 
 	int x1_trans = x1 + 1;	// +1 to account for zero padding

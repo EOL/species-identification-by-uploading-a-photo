@@ -32,6 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gsl/gsl_histogram2d.h>
 #include <gsl/gsl_statistics_double.h>
 
+#include "compare_histogram.h"
+
 double comp_intersect_histogram2d_gsl (gsl_histogram2d * patch_histogram, gsl_histogram2d * texture_histogram, int bins_x, int bins_y) {	// high value is a positive match
 
 	double these_histogram_sums [2] = {gsl_histogram2d_sum(patch_histogram), gsl_histogram2d_sum(texture_histogram)};

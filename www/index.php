@@ -17,7 +17,9 @@
 		<a href="del_program.php">Delete Program</a><br/>
 		<hr/>
 		<a href="make_textures.php">Make Textures From EOL API</a><br/>
-		<a href="view_textures.php">View Textures</a>			
+		<a href="view_textures.php">View Textures</a>		
+		<hr/>
+		<a href="make_gabormagimgs.php">Make Gabor Magnitude Image From EOL API</a><br/>	
 		<br/><br/>
 
 	</div>

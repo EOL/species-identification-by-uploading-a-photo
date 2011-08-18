@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 	$binary_iteration = 0;
 
 	foreach($result as $row) {
+
+		// TODO: Weightings aren't taken into account, results are shown separately. Aggregrate results.
 	
 		$binary[$binary_iteration] = $row['binary'];
 
@@ -66,6 +68,76 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 		}
 
+		if ($binary[$binary_iteration] == "compare_gabor_mag_images") {
+
+			// create gabor feature vector for cropped image
+			$cropped_img_gabor_feature_vector = "";
+
+			for ($scale=0; $scale<$GABOR_MAG_SCALE_LIMIT; $scale++) {
+
+				for ($orientation=0; $orientation<$GABOR_MAG_ORIENTATION_LIMIT; $orientation++) {
+
+					$gabor_cmd = $BIN_DIR_PATH."construct_gabor_mag_image ".$crop_path." ".$orientation." ".$scale;
+
+					// generate Gabor magnitude feature vector elements	
+					$output = array();
+					$output = exec($gabor_cmd);
+
+					$output_stats = explode(",", $output);	// 2D array, [0] = mean, [1] = stddev
+
+					$cropped_img_gabor_feature_vector = $cropped_img_gabor_feature_vector.$output.",";
+
+				}
+
+			}
+	
+			$cropped_img_gabor_feature_vector = rtrim($cropped_img_gabor_feature_vector, ",");
+
+			// find number of sets that need to be calculated
+
+			$set_query = "SELECT * FROM gabormagimgs WHERE species_id = ".$species_id." GROUP BY img_path";
+			$set_result = $dbh->query($set_query);
+
+			$counter = 0;
+
+			foreach($set_result as $set_row) {
+
+				$query_img_gabor_feature_vector = "";
+	
+				$this_img_path = $set_row['img_path'];
+				
+				$img_query = 'SELECT * FROM gabormagimgs WHERE img_path = "'.$this_img_path.'" ORDER BY scale ASC, orientation ASC';
+				$img_result = $dbh->query($img_query);
+
+				foreach($img_result as $img_row) {
+	
+					$this_img_mean = $img_row['mean'];
+					$this_img_stddev = $img_row['stddev'];
+
+					$query_img_gabor_feature_vector = $query_img_gabor_feature_vector.$this_img_mean.",".$this_img_stddev.",";
+
+				}
+
+				$query_img_gabor_feature_vector = rtrim($query_img_gabor_feature_vector, ",");
+
+				// compare feature vectors
+
+				$compare_cmd = $BIN_DIR_PATH.$binary[$binary_iteration]." ".$GABOR_MAG_SCALE_LIMIT." ".$GABOR_MAG_ORIENTATION_LIMIT." ".$cropped_img_gabor_feature_vector." ".$query_img_gabor_feature_vector;
+
+				$output = array();
+				$output = exec($compare_cmd);
+
+				$gabor_match_coeffs[$counter] = $output;
+				$gabor_img_paths[$counter] = $this_img_path;
+
+				$counter++;
+
+				// TODO: ASYNCHRONOUS MODEL
+
+			}
+
+		}
+
 		$binary_iteration++;
 
 	}
@@ -105,11 +177,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 							<?php if ($match_coeffs[$i][$key] != "") { ?>
 
-						   		<img style="width: 30px; height: 30px;" src="<?php print $texture_files[$i][$key]; ?>"/><?php print $match_coeffs[$i][$key]; ?><br/> 
+						   		<img style="width: 50px; height: 50px;" src="<?php print $texture_files[$i][$key]; ?>"/><?php print $match_coeffs[$i][$key]; ?><br/> 
 
 							<?php } ?>
 
 						<?php }
+
+					} else if ($binary[$i] == "compare_gabor_mag_images") { 
+
+						asort($gabor_match_coeffs, SORT_NUMERIC);
+
+						foreach ($gabor_match_coeffs as $key => $val) { ?>
+
+							<?php if ($gabor_match_coeffs[$key] != "") { ?>
+
+						   		<img style="width: 100px; height: 100px;" src="<?php print $gabor_img_paths[$key]; ?>"/><?php print $gabor_match_coeffs[$key]; ?><br/> 
+
+							<?php } ?>
+
+						<?php }
+	
 
 					} ?>
 
