@@ -1,0 +1,18 @@
+General:
+
+. Asynchronous model (match_image_process.php)
+. Only store mean/stddevs (as complete feature vector) and single complete gabor magnitude image in database.
+. Consider changing binary/program format in database. Seems convoluted when more than one binary is required per algorithm (e.g. construct/compare gabor).
+. Aggregrated ranking model to combine datasets (+ include weighting).
+. Colour histograms are not textures, they are colour! Gabor analysis is texture!
+. Ability to define scale/orientation when making gabor magnitude images.
+. Add ability to type URL directly when generating textures/gabor magnitude images.
+. Separate different histogram comparison methods (EMDL1, DD, INTERSECT) to different binaries - currently set in config.php.
+
+Code:
+
+. Not releasing images from memory.
+
+Other Considerations:
+
+. Maybe want to port the C source code to function with another lowel level language other than php.
