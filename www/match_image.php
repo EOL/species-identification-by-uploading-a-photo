@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
 						?>
 
-							<option <?php if(isset($species_id) && ($this_species_id == $species_id)) print "SELECTED" ?> value="<?php print $this_species_id; ?>"><?php print $this_species_id; ?></option>
+							<option <?php if(isset($species_id) && ($this_species_id == $species_id)) print "SELECTED" ?> value="<?php print $this_species_id; ?>"><?php print $this_species_name; ?></option>
 
 						<?php 
 
