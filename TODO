@@ -8,6 +8,9 @@ General:
 . Ability to define scale/orientation when making gabor magnitude images.
 . Add ability to type URL directly when generating textures/gabor magnitude images.
 . Separate different histogram comparison methods (EMDL1, DD, INTERSECT) to different binaries - currently set in config.php.
+. Both gabor magnitude image and texture creation should probably run concurrently (one page) so the same images have both features. Problem with this
+  is the crop definition will differ for both. Would need two separate cropboxes.
+. Remove information from READMEs (preferentially use man/Cookbook).
 
 Code:
 

@@ -1,17 +1,3 @@
-Directory contents:
-
-add_program.php - add a program to the database
-add_species.php - add a species to the database
-config.php - some configuration variables (e.g. histogram backprojection comparison type)
-connect.php - db connection script
-del_program.php - delete a program from the database
-del_species.php - delete a species from the database (note there are no foreign key constraints in place, so be careful about leaving orphaned entries)
-index.php - the UI page
-make_textures.php - make textures using the EOL API
-match_image.php - match an image > match_image_process.php - program dependent matching process page
-process_job.php - asynchronous job processing script
-view_textures.php - view available textures
-
 To setup the web front end:
 
 1.	A web server must be running, e.g. Apache
