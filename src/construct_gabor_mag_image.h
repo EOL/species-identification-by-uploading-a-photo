@@ -1,6 +1,6 @@
 /*
 
-construct_gabor_mag_image.h - Constructs a series of Gabor magnitude images with user defined scale and orientation ranges
+construct_gabor_mag_image.h - Constructs a Gabor magnitude coefficient image of a user defined scale and orientation
 
 Copyright (C) 2011 Rob Barnsley (rmb@astro.ljmu.ac.uk)
 
