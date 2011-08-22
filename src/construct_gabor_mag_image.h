@@ -2,7 +2,9 @@
 
 construct_gabor_mag_image.h - Constructs a Gabor magnitude coefficient image of a user defined scale and orientation
 
-Copyright (C) 2011 Rob Barnsley (rmb@astro.ljmu.ac.uk)
+COPYRIGHT (c) 2011 R.M.Barnsley (rmb@astro.ljmu.ac.uk) and Marine 
+Biological Lab, Woods Hole, MA.
+www.mbl.edu, www.eol.org, https://github.com/EncyclopediaOfLife
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
